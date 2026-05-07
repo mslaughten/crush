@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/crush/internal/config"
 	"github.com/charmbracelet/crush/internal/csync"
 	"github.com/charmbracelet/crush/internal/db"
+	"github.com/charmbracelet/crush/internal/permission"
 	"github.com/charmbracelet/crush/internal/proto"
 	"github.com/charmbracelet/crush/internal/skills"
 	"github.com/charmbracelet/crush/internal/ui/util"
@@ -97,7 +98,13 @@ func (b *Backend) CreateWorkspace(args proto.Workspace) (*Workspace, proto.Works
 		return nil, proto.Workspace{}, fmt.Errorf("failed to initialize config: %w", err)
 	}
 
-	cfg.Overrides().SkipPermissionRequests = args.YOLO
+	cfg.Overrides().SkipPermissionRequests = args.PermissionMode != proto.WorkspacePermissionModeNormal && args.PermissionMode != ""
+	switch args.PermissionMode {
+	case proto.WorkspacePermissionModeSuperYolo:
+		cfg.Overrides().PermissionMode = permission.PermissionModeSuperYolo
+	case proto.WorkspacePermissionModeYolo:
+		cfg.Overrides().PermissionMode = permission.PermissionModeYolo
+	}
 
 	if err := createDotCrushDir(cfg.Config().Options.DataDirectory); err != nil {
 		return nil, proto.Workspace{}, fmt.Errorf("failed to create data directory: %w", err)
@@ -148,14 +155,14 @@ func (b *Backend) CreateWorkspace(args proto.Workspace) (*Workspace, proto.Works
 	}
 
 	result := proto.Workspace{
-		ID:      id,
-		Path:    args.Path,
-		DataDir: cfg.Config().Options.DataDirectory,
-		Debug:   cfg.Config().Options.Debug,
-		YOLO:    cfg.Overrides().SkipPermissionRequests,
-		Config:  cfg.Config(),
-		Env:     args.Env,
-		Skills:  skillStatesToProto(skillStates),
+		ID:             id,
+		Path:           args.Path,
+		DataDir:        cfg.Config().Options.DataDirectory,
+		Debug:          cfg.Config().Options.Debug,
+		PermissionMode: permissionModeToProto(cfg.Overrides().PermissionMode),
+		Config:         cfg.Config(),
+		Env:            args.Env,
+		Skills:         skillStatesToProto(skillStates),
 	}
 
 	return ws, result, nil
@@ -253,15 +260,26 @@ func (b *Backend) Shutdown() {
 func workspaceToProto(ws *Workspace) proto.Workspace {
 	cfg := ws.Cfg.Config()
 	out := proto.Workspace{
-		ID:      ws.ID,
-		Path:    ws.Path,
-		YOLO:    ws.Cfg.Overrides().SkipPermissionRequests,
-		DataDir: cfg.Options.DataDirectory,
-		Debug:   cfg.Options.Debug,
-		Config:  cfg,
-	}
-	if ws.Skills != nil {
-		out.Skills = skillStatesToProto(ws.Skills.States())
+		ID:             ws.ID,
+		Path:           ws.Path,
+		PermissionMode: permissionModeToProto(ws.Cfg.Overrides().PermissionMode),
+		DataDir:        cfg.Options.DataDirectory,
+		Debug:          cfg.Options.Debug,
+		Config:         cfg,
 	}
 	return out
 }
+
+// permissionModeToProto converts an internal permission.PermissionMode to the
+// proto wire representation.
+func permissionModeToProto(mode permission.PermissionMode) proto.WorkspacePermissionMode {
+	switch mode {
+	case permission.PermissionModeSuperYolo:
+		return proto.WorkspacePermissionModeSuperYolo
+	case permission.PermissionModeYolo:
+		return proto.WorkspacePermissionModeYolo
+	default:
+		return proto.WorkspacePermissionModeNormal
+	}
+}
+

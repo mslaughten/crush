@@ -93,11 +93,16 @@ func New(ctx context.Context, conn *sql.DB, store *config.ConfigStore, skillsMgr
 		allowedTools = cfg.Permissions.AllowedTools
 	}
 
+	permSvc := permission.NewPermissionService(store.WorkingDir(), skipPermissionsRequests, allowedTools)
+	if store.Overrides().PermissionMode != 0 {
+		permSvc.SetPermissionMode(store.Overrides().PermissionMode)
+	}
+
 	app := &App{
 		Sessions:    sessions,
 		Messages:    messages,
 		History:     files,
-		Permissions: permission.NewPermissionService(store.WorkingDir(), skipPermissionsRequests, allowedTools),
+		Permissions: permSvc,
 		FileTracker: filetracker.NewService(q),
 		LSPManager:  lsp.NewManager(store),
 		Skills:      skillsMgr,
