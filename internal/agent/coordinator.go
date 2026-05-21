@@ -308,13 +308,32 @@ func getProviderOptions(model Model, providerCfg config.ProviderConfig) fantasy.
 		var (
 			_, hasEffort = mergedOptions["effort"]
 			_, hasThink  = mergedOptions["thinking"]
+			extraBody    = make(map[string]any)
 		)
-		switch {
-		case !hasEffort && model.ModelCfg.ReasoningEffort != "" && model.CatwalkCfg.CanReason:
-			mergedOptions["effort"] = model.ModelCfg.ReasoningEffort
-		case !hasThink && model.ModelCfg.Think:
-			mergedOptions["thinking"] = map[string]any{"budget_tokens": 2000}
+
+		switch providerCfg.ID {
+		case string(catwalk.InferenceProviderAlibabaSingapore):
+			switch {
+			case !hasEffort && len(model.CatwalkCfg.ReasoningLevels) > 0 && model.ModelCfg.ReasoningEffort != "":
+				extraBody["reasoning_effort"] = model.ModelCfg.ReasoningEffort
+			case !hasThink && model.CatwalkCfg.CanReason:
+				if model.ModelCfg.Think {
+					mergedOptions["thinking"] = map[string]any{"type": "enabled"}
+				} else {
+					mergedOptions["thinking"] = map[string]any{"type": "disabled"}
+				}
+			}
+			mergedOptions["extraBody"] = extraBody
+
+		default:
+			switch {
+			case !hasEffort && model.ModelCfg.ReasoningEffort != "" && model.CatwalkCfg.CanReason:
+				mergedOptions["effort"] = model.ModelCfg.ReasoningEffort
+			case !hasThink && model.ModelCfg.Think:
+				mergedOptions["thinking"] = map[string]any{"budget_tokens": 2000}
+			}
 		}
+
 		parsed, err := anthropic.ParseOptions(mergedOptions)
 		if err == nil {
 			options[anthropic.Name] = parsed
