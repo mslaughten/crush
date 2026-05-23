@@ -97,6 +97,13 @@ func wrapEvent(ev any) *pubsub.Payload {
 			Type:    e.Type,
 			Payload: skillsEventToProto(e.Payload),
 		})
+	case pubsub.Event[permission.ModeChangedEvent]:
+		return envelope(pubsub.PayloadTypePermissionModeChanged, pubsub.Event[proto.PermissionModeEvent]{
+			Type: e.Type,
+			Payload: proto.PermissionModeEvent{
+				Mode: permissionModeToProto(e.Payload.Mode),
+			},
+		})
 	default:
 		slog.Warn("Unrecognized event type for SSE wrapping", "type", fmt.Sprintf("%T", ev))
 		return nil

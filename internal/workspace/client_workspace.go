@@ -707,6 +707,13 @@ func (w *ClientWorkspace) translateEvent(ev any) tea.Msg {
 			Type:    e.Type,
 			Payload: skills.Event{States: states},
 		}
+	case pubsub.Event[proto.PermissionModeEvent]:
+		// Keep the cached workspace in sync so PermissionMode() never goes
+		// stale when another client or the server changes the mode.
+		w.mu.Lock()
+		w.ws.PermissionMode = e.Payload.Mode
+		w.mu.Unlock()
+		return nil
 	default:
 		slog.Warn("Unknown event type in translateEvent", "type", fmt.Sprintf("%T", ev))
 		return nil

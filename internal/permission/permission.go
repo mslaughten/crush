@@ -65,6 +65,11 @@ type PermissionNotification struct {
 	Denied     bool   `json:"denied"`
 }
 
+// ModeChangedEvent is published whenever the permission mode changes.
+type ModeChangedEvent struct {
+	Mode PermissionMode `json:"mode"`
+}
+
 type PermissionRequest struct {
 	ID          string `json:"id"`
 	SessionID   string `json:"session_id"`
@@ -89,6 +94,7 @@ type Service interface {
 	SetPermissionMode(mode PermissionMode)
 	PermissionMode() PermissionMode
 	SubscribeNotifications(ctx context.Context) <-chan pubsub.Event[PermissionNotification]
+	SubscribeModeChanges(ctx context.Context) <-chan pubsub.Event[ModeChangedEvent]
 }
 
 // PermissionKey is a composite key for session permission lookups.
@@ -103,6 +109,7 @@ type permissionService struct {
 	*pubsub.Broker[PermissionRequest]
 
 	notificationBroker    *pubsub.Broker[PermissionNotification]
+	modeBroker            *pubsub.Broker[ModeChangedEvent]
 	workingDir            string
 	sessionPermissions    *csync.Map[PermissionKey, bool]
 	pendingRequests       *csync.Map[string, chan bool]
@@ -317,6 +324,11 @@ func (s *permissionService) SetPermissionMode(mode PermissionMode) {
 	s.modeMu.Lock()
 	s.mode = mode
 	s.modeMu.Unlock()
+	s.modeBroker.Publish(pubsub.UpdatedEvent, ModeChangedEvent{Mode: mode})
+}
+
+func (s *permissionService) SubscribeModeChanges(ctx context.Context) <-chan pubsub.Event[ModeChangedEvent] {
+	return s.modeBroker.Subscribe(ctx)
 }
 
 func (s *permissionService) PermissionMode() PermissionMode {
@@ -333,6 +345,7 @@ func NewPermissionService(workingDir string, skip bool, allowedTools []string) S
 	return &permissionService{
 		Broker:              pubsub.NewBroker[PermissionRequest](),
 		notificationBroker:  pubsub.NewBroker[PermissionNotification](),
+		modeBroker:          pubsub.NewBroker[ModeChangedEvent](),
 		workingDir:          workingDir,
 		sessionPermissions:  csync.NewMap[PermissionKey, bool](),
 		autoApproveSessions: make(map[string]bool),

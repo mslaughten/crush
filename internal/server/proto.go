@@ -958,6 +958,19 @@ func protoModeToPermission(mode proto.WorkspacePermissionMode) permission.Permis
 	}
 }
 
+// permissionModeToProto converts an internal permission.PermissionMode to a
+// proto WorkspacePermissionMode.
+func permissionModeToProto(mode permission.PermissionMode) proto.WorkspacePermissionMode {
+	switch mode {
+	case permission.PermissionModeSuperYolo:
+		return proto.WorkspacePermissionModeSuperYolo
+	case permission.PermissionModeYolo:
+		return proto.WorkspacePermissionModeYolo
+	default:
+		return proto.WorkspacePermissionModeNormal
+	}
+}
+
 // handleGetWorkspacePermissionsSkip returns whether permission prompts are skipped.
 //
 //	@Summary		Get skip permissions status

@@ -143,6 +143,12 @@ type PermissionSetModeRequest struct {
 	Mode WorkspacePermissionMode `json:"mode"`
 }
 
+// PermissionModeEvent is the SSE payload published whenever the server-side
+// permission mode changes.
+type PermissionModeEvent struct {
+	Mode WorkspacePermissionMode `json:"mode"`
+}
+
 // LSPEventType represents the type of LSP event.
 type LSPEventType string
 
