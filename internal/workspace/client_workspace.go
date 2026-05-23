@@ -303,14 +303,6 @@ func (w *ClientWorkspace) PermissionDeny(perm permission.PermissionRequest) {
 	})
 }
 
-func (w *ClientWorkspace) PermissionSkipRequests() bool {
-	skip, err := w.client.GetPermissionsSkipRequests(context.Background(), w.workspaceID())
-	if err != nil {
-		return false
-	}
-	return skip
-}
-
 func (w *ClientWorkspace) PermissionMode() permission.PermissionMode {
 	switch w.cached().PermissionMode {
 	case proto.WorkspacePermissionModeSuperYolo:

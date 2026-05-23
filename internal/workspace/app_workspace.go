@@ -186,10 +186,6 @@ func (w *AppWorkspace) PermissionDeny(perm permission.PermissionRequest) {
 	w.app.Permissions.Deny(perm)
 }
 
-func (w *AppWorkspace) PermissionSkipRequests() bool {
-	return w.app.Permissions.SkipRequests()
-}
-
 func (w *AppWorkspace) PermissionMode() permission.PermissionMode {
 	return w.app.Permissions.PermissionMode()
 }
