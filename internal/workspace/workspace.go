@@ -94,7 +94,6 @@ type Workspace interface {
 	PermissionGrantPersistent(perm permission.PermissionRequest)
 	PermissionDeny(perm permission.PermissionRequest)
 	PermissionSkipRequests() bool
-	PermissionSetSkipRequests(skip bool)
 	PermissionMode() permission.PermissionMode
 	PermissionSetMode(mode permission.PermissionMode)
 

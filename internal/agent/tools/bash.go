@@ -190,12 +190,6 @@ func blockFuncs() []shell.BlockFunc {
 	}
 }
 
-// isDangerousCommand checks if a command is considered dangerous and requires
-// explicit user approval even in YOLO mode.
-func isDangerousCommand(command string) bool {
-	return shell.IsCommandBlocked(command, blockFuncs())
-}
-
 func NewBashTool(permissions permission.Service, workingDir string, attribution *config.Attribution, modelID string) fantasy.AgentTool {
 	return fantasy.NewAgentTool(
 		BashToolName,
@@ -228,15 +222,14 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 			}
 
 			if !isSafeReadOnly && permissions.PermissionMode() != permission.PermissionModeSuperYolo {
-				// Check if the command is dangerous.
-				isDangerous := isDangerousCommand(params.Command)
+				// Check if the command is dangerous once and reuse.
+				blocks := blockFuncs()
+				isDangerous := shell.IsCommandBlocked(params.Command, blocks)
 
-				switch {
-				case isDangerous && permissions.PermissionMode() == permission.PermissionModeNormal:
-					// Block dangerous commands outright in normal mode.
-					return fantasy.NewTextErrorResponse(fmt.Sprintf("%q blocked as a potentially dangerous command", params.Command)), nil
-				case isDangerous:
-					// Only prompt for dangerous commands in yolo mode.
+				// In yolo mode, skip the prompt entirely for non-dangerous
+				// commands. In normal mode, always prompt (dangerous commands
+				// get an extra warning flag).
+				if permissions.PermissionMode() != permission.PermissionModeYolo || isDangerous {
 					approved, err := permissions.Request(ctx,
 						permission.CreatePermissionRequest{
 							SessionID:   sessionID,
@@ -246,7 +239,7 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 							Action:      "execute",
 							Description: fmt.Sprintf("Execute command: %s", params.Command),
 							Params:      BashPermissionsParams(params),
-							Dangerous:   true,
+							Dangerous:   isDangerous,
 						},
 					)
 					if err != nil {
@@ -255,12 +248,16 @@ func NewBashTool(permissions permission.Service, workingDir string, attribution 
 					if !approved {
 						return NewPermissionDeniedResponse(), nil
 					}
-					// User approved the dangerous command - execute without blockFuncs.
-					return executeBashCommand(ctx, params, execWorkingDir, nil)
+					if isDangerous {
+						// User explicitly approved a dangerous command - run
+						// without block functions so it's not re-blocked.
+						return executeBashCommand(ctx, params, execWorkingDir, nil)
+					}
 				}
 			}
 
-			// Determine block functions based on permission mode
+			// Determine block functions based on permission mode. Super yolo
+			// drops all restrictions; other modes enforce the block list.
 			blockFuncsToUse := blockFuncs()
 			if permissions.PermissionMode() == permission.PermissionModeSuperYolo {
 				blockFuncsToUse = nil

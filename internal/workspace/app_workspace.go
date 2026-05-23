@@ -190,10 +190,6 @@ func (w *AppWorkspace) PermissionSkipRequests() bool {
 	return w.app.Permissions.SkipRequests()
 }
 
-func (w *AppWorkspace) PermissionSetSkipRequests(skip bool) {
-	w.app.Permissions.SetSkipRequests(skip)
-}
-
 func (w *AppWorkspace) PermissionMode() permission.PermissionMode {
 	return w.app.Permissions.PermissionMode()
 }

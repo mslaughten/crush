@@ -138,6 +138,11 @@ type PermissionSkipRequest struct {
 	Skip bool `json:"skip"`
 }
 
+// PermissionSetModeRequest represents a request to set the permission mode.
+type PermissionSetModeRequest struct {
+	Mode WorkspacePermissionMode `json:"mode"`
+}
+
 // LSPEventType represents the type of LSP event.
 type LSPEventType string
 

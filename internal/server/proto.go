@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/charmbracelet/crush/internal/backend"
+	"github.com/charmbracelet/crush/internal/permission"
 	"github.com/charmbracelet/crush/internal/proto"
 	"github.com/charmbracelet/crush/internal/session"
 )
@@ -911,6 +912,49 @@ func (c *controllerV1) handlePostWorkspacePermissionsSkip(w http.ResponseWriter,
 	if err := c.backend.SetPermissionsSkip(id, req.Skip); err != nil {
 		c.handleError(w, r, err)
 		return
+	}
+}
+
+// handlePostWorkspacePermissionsMode sets the permission mode for a workspace.
+//
+//	@Summary		Set permission mode
+//	@Tags			permissions
+//	@Accept			json
+//	@Param			id		path	string							true	"Workspace ID"
+//	@Param			request	body	proto.PermissionSetModeRequest	true	"Permission mode request"
+//	@Success		200
+//	@Failure		400	{object}	proto.Error
+//	@Failure		404	{object}	proto.Error
+//	@Failure		500	{object}	proto.Error
+//	@Router			/workspaces/{id}/permissions/mode [post]
+func (c *controllerV1) handlePostWorkspacePermissionsMode(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	var req proto.PermissionSetModeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		c.server.logError(r, "Failed to decode request", "error", err)
+		jsonError(w, http.StatusBadRequest, "failed to decode request")
+		return
+	}
+
+	mode := protoModeToPermission(req.Mode)
+	if err := c.backend.SetPermissionMode(id, mode); err != nil {
+		c.handleError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+// protoModeToPermission converts a proto WorkspacePermissionMode to an
+// internal permission.PermissionMode.
+func protoModeToPermission(mode proto.WorkspacePermissionMode) permission.PermissionMode {
+	switch mode {
+	case proto.WorkspacePermissionModeSuperYolo:
+		return permission.PermissionModeSuperYolo
+	case proto.WorkspacePermissionModeYolo:
+		return permission.PermissionModeYolo
+	default:
+		return permission.PermissionModeNormal
 	}
 }
 

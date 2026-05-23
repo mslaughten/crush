@@ -926,7 +926,7 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.textarea.Placeholder = m.readyPlaceholder
 		}
-		if m.com.Workspace.PermissionSkipRequests() {
+		if m.com.Workspace.PermissionMode() == permission.PermissionModeYolo {
 			m.textarea.Placeholder = "Yolo mode!"
 		}
 		if m.com.Workspace.PermissionMode() == permission.PermissionModeSuperYolo {

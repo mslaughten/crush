@@ -282,4 +282,3 @@ func permissionModeToProto(mode permission.PermissionMode) proto.WorkspacePermis
 		return proto.WorkspacePermissionModeNormal
 	}
 }
-

@@ -697,7 +697,7 @@ func quickStyle(o quickStyleOpts) Styles {
 	s.Editor.PromptYoloDotsBlurred = s.Editor.PromptYoloDotsFocused.Foreground(o.fgMoreSubtle)
 	// Super Yolo
 	s.Editor.PromptSuperYoloIconFocused = lipgloss.NewStyle().MarginRight(1).Foreground(o.onPrimary).Background(o.destructive).Bold(true).SetString(" # ")
-	s.Editor.PromptSuperYoloIconBlurred = s.Editor.PromptSuperYoloIconFocused.Foreground(o.onPrimary).Background(o.destructive)
+	s.Editor.PromptSuperYoloIconBlurred = s.Editor.PromptSuperYoloIconFocused.Foreground(o.bgBase).Background(o.fgMoreSubtle)
 	s.Editor.PromptSuperYoloDotsFocused = lipgloss.NewStyle().MarginRight(1).Foreground(o.destructive).SetString(":::")
 	s.Editor.PromptSuperYoloDotsBlurred = s.Editor.PromptSuperYoloDotsFocused.Foreground(o.fgMoreSubtle)
 

@@ -22,6 +22,7 @@ func (b *Backend) GrantPermission(workspaceID string, req proto.PermissionGrant)
 		Action:      req.Permission.Action,
 		Params:      req.Permission.Params,
 		Path:        req.Permission.Path,
+		Dangerous:   req.Permission.Dangerous,
 	}
 
 	switch req.Action {
@@ -56,4 +57,15 @@ func (b *Backend) GetPermissionsSkip(workspaceID string) (bool, error) {
 	}
 
 	return ws.Permissions.SkipRequests(), nil
+}
+
+// SetPermissionMode sets the permission mode for a workspace.
+func (b *Backend) SetPermissionMode(workspaceID string, mode permission.PermissionMode) error {
+	ws, err := b.GetWorkspace(workspaceID)
+	if err != nil {
+		return err
+	}
+
+	ws.Permissions.SetPermissionMode(mode)
+	return nil
 }

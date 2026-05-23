@@ -508,6 +508,19 @@ func (c *Client) SetPermissionsSkipRequests(ctx context.Context, id string, skip
 	return nil
 }
 
+// SetPermissionMode sets the permission mode for a workspace.
+func (c *Client) SetPermissionMode(ctx context.Context, id string, mode proto.WorkspacePermissionMode) error {
+	rsp, err := c.post(ctx, fmt.Sprintf("/workspaces/%s/permissions/mode", id), nil, jsonBody(proto.PermissionSetModeRequest{Mode: mode}), http.Header{"Content-Type": []string{"application/json"}})
+	if err != nil {
+		return fmt.Errorf("failed to set permission mode: %w", err)
+	}
+	defer rsp.Body.Close()
+	if rsp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to set permission mode: status code %d", rsp.StatusCode)
+	}
+	return nil
+}
+
 // GetPermissionsSkipRequests retrieves the skip-requests flag for a workspace.
 func (c *Client) GetPermissionsSkipRequests(ctx context.Context, id string) (bool, error) {
 	rsp, err := c.get(ctx, fmt.Sprintf("/workspaces/%s/permissions/skip", id), nil, nil)

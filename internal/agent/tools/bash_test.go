@@ -167,7 +167,7 @@ func TestIsDangerousCommand(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := isDangerousCommand(tt.command)
+			result := shell.IsCommandBlocked(tt.command, blockFuncs())
 			assert.Equal(t, tt.dangerous, result, "command: %s", tt.command)
 		})
 	}
