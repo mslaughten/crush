@@ -38,7 +38,8 @@ converse with AI models directly from your terminal.
 
 It supports multiple AI providers and offers a rich TUI experience
 powered by Bubble Tea and Lip Gloss.`,
-		SilenceUsage: true,
+		SilenceUsage:  true,
+		SilenceErrors: true, // print errors ourselves for cleaner output
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load(cfgFile)
 			if err != nil {
