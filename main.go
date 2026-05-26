@@ -55,11 +55,13 @@ powered by Bubble Tea and Lip Gloss.`,
 		},
 	}
 
+	// Default config path uses XDG_CONFIG_HOME if set, otherwise falls back to
+	// $HOME/.config/crush/config.yaml via config.DefaultPath().
 	cmd.PersistentFlags().StringVar(
 		&cfgFile,
 		"config",
 		"",
-		"config file (default: $HOME/.config/crush/config.yaml)",
+		"config file (default: $XDG_CONFIG_HOME/crush/config.yaml or $HOME/.config/crush/config.yaml)",
 	)
 
 	cmd.AddCommand(versionCmd())
